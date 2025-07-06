@@ -1,0 +1,9 @@
+{
+  "name": "edu-platform",
+  "version": "1.0.0",
+  "description": "Образовательная платформа",
+  "main": "index.js",
+  "scripts": {
+    "start": "node backend/server.js"
+  }
+}
