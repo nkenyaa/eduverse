@@ -2,14 +2,21 @@ const express = require('express')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
 const cors = require('cors')
+
 const { courses, users, progress, createUser } = require('./data')
 
 const app = express()
 app.use(cors())
 app.use(express.json())
 
-const JWT_SECRET = 'secret'
+const JWT_SECRET = 'secret' // 🔐 Заменить в будущем на переменную окружения
 
+// создать демо-пользователя
+if (users.length === 0) {
+  createUser({ name: 'Иван', email: 'ivan@example.com', password: '1234' })
+}
+
+// middleware авторизации
 function auth(req, res, next) {
   const authHeader = req.headers.authorization
   if (!authHeader) return res.status(401).send('No token')
@@ -22,6 +29,7 @@ function auth(req, res, next) {
   }
 }
 
+// маршруты
 app.get('/', (req, res) => res.send('Backend работает'))
 
 app.post('/api/register', (req, res) => {
@@ -54,18 +62,35 @@ app.get('/api/courses/:id', (req, res) => {
 app.get('/api/me', auth, (req, res) => {
   const user = users.find(u => u.id === req.user.id)
   if (!user) return res.status(404).send('Not found')
-  res.json({ user: { id: user.id, name: user.name, role: user.role }, progress: progress[user.id] })
+
+  res.json({
+    user: {
+      id: user.id,
+      name: user.name,
+      role: user.role
+    },
+    progress: progress[user.id] || []
+  })
 })
 
 app.post('/api/lessons/:id/complete', auth, (req, res) => {
   const { id } = req.params
-  const userProgress = progress[req.user.id]
+  const user = users.find(u => u.id === req.user.id)
+  if (!user) return res.status(404).send('User not found')
+
   const course = courses.find(c => c.lessons.some(l => l.id === id))
   if (!course) return res.status(404).send('Lesson not found')
+
   const lesson = course.lessons.find(l => l.id === id)
+  if (!lesson) return res.status(404).send('Lesson not found')
+
+  const userProgress = progress[req.user.id] || []
+
   if (!userProgress.find(p => p.lessonId === id)) {
     userProgress.push({ lessonId: id, lessonTitle: lesson.title })
+    progress[req.user.id] = userProgress
   }
+
   res.json({ success: true })
 })
 

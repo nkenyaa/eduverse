@@ -22,12 +22,15 @@ const courses = [
 ]
 
 // пользователи и прогресс
+
 const users = [] // {id, name, email, passwordHash, role}
 const progress = {} // userId -> [{lessonId, lessonTitle}]
+
 
 function createUser({ name, email, password, role = 'student' }) {
   const id = Date.now().toString()
   const passwordHash = bcrypt.hashSync(password, 10)
+
   const user = { id, name, email, passwordHash, role }
   users.push(user)
   progress[id] = []
@@ -35,3 +38,4 @@ function createUser({ name, email, password, role = 'student' }) {
 }
 
 module.exports = { courses, users, progress, createUser }
+
